@@ -16,8 +16,8 @@ class WireServiceProvider extends ServiceProvider {
         // ]);
 
         copy(__DIR__.'/Http/Controllers/WireController.php', base_path('App/Http/Controllers/WireController.php'));
-        mkdir(base_path('resources/js/wire'));
-        copy(__DIR__.'/resources/js/wire/wire.js', base_path('resources/js/wire/wire.js'));
+        //mkdir(base_path('resources/js/wire'));
+        copy(__DIR__.'/resources/js/wire/wire.js', base_path('Resources/js/wire/wire.js'));
 
     }
 
