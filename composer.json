@@ -1,0 +1,24 @@
+{
+    "name": "als/wire",
+    "description": "Allows to send ajax request to server and manage db on client side for Laravel",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Akex Sorkin",
+            "email": "Alesorkin1980@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Als\\Wire\\" : "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": ["Alex\\Wire\\WireServiceProvider"]
+        }
+    }
+}
