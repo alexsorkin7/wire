@@ -18,7 +18,7 @@
     },
     "extra": {
         "laravel": {
-            "providers": ["Alex\\Wire\\WireServiceProvider"]
+            "providers": ["Als\\Wire\\WireServiceProvider"]
         }
     }
 }
