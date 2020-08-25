@@ -10,7 +10,7 @@ class WireServiceProvider extends ServiceProvider {
 
     public function boot() {
         copy(__DIR__.'/Http/Controllers/WireController.php', base_path('App/Http/Controllers/WireController.php'));
-        copy(__DIR__.'/resources/js/wire/wire.js', base_path('Resources/js/wire/wire.js'));
+        copy(__DIR__.'/resources/js/wire/wire.js', 'resources/js/wire/wire.js');
         self::addToAppJs();
     }
 
