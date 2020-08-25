@@ -1,6 +1,6 @@
 <?php
 
-namespace Als\Wire\Http\Controllers;
+namespace Als\Wire;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;

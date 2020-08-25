@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 
 class MakeWireController extends Command {
 
-    protected $signature = 'make:wireController {name}';
+    protected $signature = 'wire:controller {name}';
     protected $description = 'Makes Wire controller';
 
     public function handle() {
