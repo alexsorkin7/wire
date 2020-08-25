@@ -13,6 +13,9 @@ class WireServiceProvider extends ServiceProvider {
         if(!file_exists(base_path('resources/js/wire'))) mkdir(base_path('resources/js/wire'));
         if(!file_exists(base_path('resources/js/wire/wire.js'))) copy(__DIR__.'/resources/js/wire/wire.js', base_path('resources/js/wire/wire.js'));
         self::addToAppJs();
+        $this->info("Controller and route are created. 
+        Please run 'npm install' and the 'npm run dev' or 'npm run watch'");
+
     }
 
     public function register() {
@@ -22,7 +25,7 @@ class WireServiceProvider extends ServiceProvider {
     }
 
     private function addToAppJs() {
-        $app = fopen('resources/js/app.js', "a") or die("Unable to open file!");
+        $app = fopen(base_path('resources/js/app.js'), "a") or die("Unable to open file!");
         $txt = "\nrequire('./wire/wire');\n";
         fwrite($app, $txt);
         fclose($app);
