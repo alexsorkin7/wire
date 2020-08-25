@@ -12,7 +12,7 @@ class MakeWireController extends Command {
     public function handle() {
         self::makeController();
         self::makeRoute();
-        $this->info("Controller and route are created. /n
+        $this->info("Controller and route are created. 
         Please run 'npm install' and the 'npm run dev' or 'npm run watch'");
     }
 
@@ -36,7 +36,7 @@ use Als\Wire\WireController;
 class '.$this->argument('name').' extends WireController
 {
     public $tables = [];
-    public $auth = true;
+    public $auth = false;
 
 }
         ';
