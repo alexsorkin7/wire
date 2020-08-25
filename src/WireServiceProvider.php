@@ -13,9 +13,7 @@ class WireServiceProvider extends ServiceProvider {
         if(!file_exists(base_path('resources/js/wire'))) mkdir(base_path('resources/js/wire'));
         if(!file_exists(base_path('resources/js/wire/wire.js'))) copy(__DIR__.'/resources/js/wire/wire.js', base_path('resources/js/wire/wire.js'));
         self::addToAppJs();
-        echo("Controller and route are created. 
-        Please run 'npm install' and the 'npm run dev' or 'npm run watch'");
-
+        echo("Please run 'npm install' and the 'npm run dev' or 'npm run watch'");
     }
 
     public function register() {

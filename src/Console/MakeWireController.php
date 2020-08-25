@@ -12,6 +12,7 @@ class MakeWireController extends Command {
     public function handle() {
         self::makeController();
         self::makeRoute();
+        $this->info('wireController and route are created');
     }
 
     private function makeRoute() {
