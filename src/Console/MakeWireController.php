@@ -4,7 +4,7 @@ namespace als\Wire\Console;
 
 use Illuminate\Console\Command;
 
-class WireController extends Command {
+class MakeWireController extends Command {
 
     protected $signature = 'make:wireController {name}';
     protected $description = 'Makes Wire controller';
@@ -12,11 +12,13 @@ class WireController extends Command {
     public function handle() {
         self::makeController();
         self::makeRoute();
+        $this->info("Controller and route are created. /n
+        Please run 'npm install' and the 'npm run dev' or 'npm run watch'");
     }
 
     private function makeRoute() {
         $route = fopen('routes/web.php', "a") or die("Unable to open file!");
-        $txt = "Route::resource('".lcfirst(str_replace('Controller','',$this->argument('name')))."','".$this->argument('name')."');\n";
+        $txt = "\nRoute::resource('".lcfirst(str_replace('Controller','',$this->argument('name')))."','".$this->argument('name')."');\n";
         fwrite($route, $txt);
         fclose($route);
     }
