@@ -169,30 +169,32 @@ export default class Wire {
             }
             if(fnInput !== undefined) fnInput(response);
         });
-        this.__saveOnLeave(route,fnOutput);
+
+        if(document.getElementsByName('_token')[0] !== undefined) {
+            let token = document.getElementsByName('_token')[0].value;
+            document.addEventListener('mouseleave',function(){self.__saveOnLeave(route,fnOutput,token);});
+            document.addEventListener('touchend',function(){self.__saveOnLeave(route,fnOutput,token);});
+        } else console.log('Please add csrf token somewhere in document');
     }
 
 
-    __saveOnLeave(updateRoute,fnOutput) {
+    __saveOnLeave(updateRoute,fnOutput,token) {
         let self = this;
-        let token = document.getElementsByName('_token')[0].value;
-        document.addEventListener('mouseleave',function() {
-            let gap = Date.now() - self.__now;
-            if(Object.keys(self.__changes).length >0 && gap>3000) {
-                let data = {data:JSON.stringify(self.__changes),_token:token};
-                self.ajax(updateRoute,function(response){
-                    response = JSON.parse(response);
-                    self.__changes = {};
-                    for(let tableName in response) {
-                        for(let id in response[tableName]) {
-                            if(response[tableName][id] !== 'removed') self.__tables[tableName][id] = response[tableName][id];
-                        }
-                        localStorage.setItem(tableName,JSON.stringify(response[tableName])); //update local storage
+        let gap = Date.now() - self.__now;
+        if(Object.keys(self.__changes).length >0 && gap>3000) {
+            let data = {data:JSON.stringify(self.__changes),_token:token};
+            self.ajax(updateRoute,function(response){
+                response = JSON.parse(response);
+                self.__changes = {};
+                for(let tableName in response) {
+                    for(let id in response[tableName]) {
+                        if(response[tableName][id] !== 'removed') self.__tables[tableName][id] = response[tableName][id];
                     }
-                    if(fnOutput !== undefined && typeof fnOutput == 'function') fnOutput(response);
-                },'POST',data);
-            }
-        });
+                    localStorage.setItem(tableName,JSON.stringify(response[tableName])); //update local storage
+                }
+                if(fnOutput !== undefined && typeof fnOutput == 'function') fnOutput(response);
+            },'POST',data);
+        }
     }
 //#endregion
 //#region getData createNewRecord
@@ -364,11 +366,14 @@ export default class Wire {
         table['includes'] = function(key,value) {
             let collection = {};
             let ids = self.__removeMethods(this,methods);
-            ids.filter( (id) => {
-                if(this[id][key].includes(value)) {
-                    collection[id] = this[id];
-                }
-            });
+            if(this[ids[0]][key] == undefined) console.log('The key is not valid');
+            else {
+                ids.filter( (id) => {
+                    if(this[id][key].includes(value)) {
+                        collection[id] = this[id];
+                    }
+                });
+            }
             methods.forEach(method => {
                 collection[method] = this[method];
             });
@@ -383,18 +388,8 @@ export default class Wire {
             let newSortKey;
             let newCollection = {};
             let key;
-            let ifDate;
             ids.forEach(sortKey => {
                 key = this[sortKey][field]+''; //+'' for case the typof key is number
-            //if value is a date
-                if(key !== undefined) {
-                    ifDate = key.split('/');
-                    if(ifDate.length == 3) {
-                        if(ifDate[0].length == 1) ifDate[0] = 0+ifDate[0];
-                        if(ifDate[1].length == 1) ifDate[1] = 0+ifDate[1];
-                        key = `${ifDate[2]}/${ifDate[0]}/${ifDate[1]}`;
-                    }
-                }
                 newSortKey = key+'_id'+this[sortKey].id;
                 newCollection[newSortKey] = this[sortKey];
             });
@@ -550,139 +545,6 @@ export default class Wire {
     //     });
     // }
 //#endregion
-//#region Date
-    static date(date) {
-        let obj = {};
-
-        obj.__defineGetter__ ('sqlToInput',function() {
-            if(date.match(/[0-9]{4}\-[0-9]{2}\-[0-9]{2}\s[0-9]{2}\:[0-9]{2}\:[0-9]{2}/)) {
-               return date.split(' ');
-            } else if(date.match(/([0-9][0-9]?\/?){3}/)) {// mm/dd/yy
-                let newDate = date.split('/');
-                if(newDate[0].length == 1)  mm = '0'+newDate[0]; //m -> mm
-                if(newDate[1].length == 1)  dd = '0'+newDate[1]; //d -> mm
-                if(newDate[2].length == 2)  yyyy = '20'+newDate[2]; //yy -> yyyy
-            return `${yyyy}-${mm}-${dd}`; //yyyy-mm-dd
-            }
-        });
-
-        obj.inputToSql = function() {
-
-        }
-
-        obj.weekDay = function(days,sunday = true) {
-            let d = new Date(this.date);
-            if(sunday) d = d.getDay();
-            else d = d.getDay();
-            if(days !== undefined) d = days[d];
-            return d;
-        }
-
-        obj.getDays = function(weekDay) {
-            let d = new Date(this.date);
-            let month = d.getMonth()+1;
-            let year = d.getFullYear();
-            let lastDay = new Date(year,month,0);
-            lastDay = lastDay.getDate();
-            let days = [];
-            for(let i=1; i<=lastDay;i++) {
-                if(new Date(year,month-1,i).getDay() == weekDay) {
-                    days.push(i);
-                }
-            }
-            return days;
-        }
-
-        obj.fromSql = function(format, days = 0) {
-            //sql format mm/dd/yy
-            //js format yyyy-mm-dd
-            let dateArr = this.date.split('/');
-            let yy = dateArr[2];
-            let yyyy = `20${yy}`;
-            let dd;
-            let mm;
-            if(dateArr[1].length == 1) dd = `0${dateArr[1]}`;
-            else dd = dateArr[1];
-            if(dateArr[0].length == 1) mm = `0${dateArr[0]}`;
-            else mm = dateArr[0];
-            if(days > 0) {
-                let date = new Date(yyyy,mm,dd);
-                date.setDate(date.getDate() + days*1);
-                yyyy = date.getFullYear();
-                mm = date.getMonth() + 1;
-                if(mm < 10) mm = '0'+mm;
-                dd = date.getDate();
-                if(dd < 10) dd = '0'+dd;
-            }
-            let newDate = `${yyyy}-${mm}-${dd}`;
-            if(format !== undefined) newDate = format.replace('dd',dd).replace('mm',mm).replace('yyyy',yyyy);
-            return newDate;
-        }
-
-        obj.addDays = function(days) {
-            var result = new Date(this.date);
-            result.setDate(result.getDate() + days*1);
-            return result;
-        }
-
-        obj.toSql = function(format,separator) {
-            //sql format mm/dd/yy
-            //js format yyyy-MM-dd
-            let sqlFormat = 'mm/dd/yyyy';
-            let dateArr = this.date.split(separator);
-            let formatArr = format.split(separator);
-            formatArr.forEach((element,index) => {
-                if(element == 'yyyy') dateArr[index] = dateArr[index].slice(2,4);
-                sqlFormat = sqlFormat.replace(element,dateArr[index]);
-            });
-            return sqlFormat;
-        }
-        obj.__defineGetter__('sqlToForm',function() { return this.toSqlDate(this.date,'yyyy-mm-dd','-');});
-        return obj;
-    }
-//#endregion
-//#region Time
-    static time(time) {
-        let obj = {};
-        obj.fromSql = function(format, hourFormat) {
-            //sql format hh:mm:ss PM
-            //js format hh:mm:ss
-            let ampm = this.time.slice(-2);
-            this.time = this.time.replace(' '+ampm,'');
-            let timeArr = this.time.split(':');
-
-            let hh = timeArr[0];
-            if(hh.length == 1) hh = `0${hh}`;
-            if(hourFormat !== 12 && ampm == 'PM' && hh !== '12') hh = hh/1+ 12/1;
-            let mm = timeArr[1];
-            let ss = timeArr[2];
-
-            let time = `${hh}:${mm}:${ss}`;
-            if(format !== undefined) time = format.replace('hh',hh).replace('mm',mm).replace('ss',ss);
-            return time;
-        }
-
-
-        obj.toSql = function(format) {
-            //js format hh:mm:ss
-            let sqlTime = 'hh:mm:ss'; //sql format hh:mm:ss PM
-            let ampm = 'AM';
-            let timeFormatArr = format.split(':');
-            let timeArr = this.time.split(':');
-            timeFormatArr.forEach((element,index) => {
-                if(element == 'hh' && timeArr[index]>12) {
-                    timeArr[index] = timeArr[index] - 12;
-                    ampm = 'PM';
-                    if(timeArr[index] < 10) timeArr[index] = '0'+timeArr[index];
-                }
-                if(element == 'ss' && timeArr[index] == undefined) timeArr.push('00');
-                sqlTime = sqlTime.replace(element,timeArr[index]);
-            });
-            return sqlTime+' '+ampm;
-        }
-        obj.__defineGetter__('sqlToForm',function() { return toSqlTime(this.time, 'hh:mm:ss');});
-    }
-//#endregion
 //#region Html binder
     static htmlBind(html,record,domId) {
         let nameOfField;
@@ -748,7 +610,7 @@ export default class Wire {
             });
         }
     //${variable} window[variable] = undefined - Set function with binding
-        let fuBinds = html.match(/\<(.*)\$\{.*?\}(.*)\>/g);
+        let fuBinds = html.match(/<(.*)\n?(.*?)\$\{.*\}\n?(.*)\n?(.*?)\n?(.*?)<?\/?(.*?)>/g);
         let id;
         let props;
         let inner;
@@ -760,7 +622,7 @@ export default class Wire {
         let original;
         if(fuBinds !== null) {
             fuBinds.forEach(fuBind => {
-            //Create dom element
+                //Create dom element
                 domElement = document.createRange().createContextualFragment(fuBind.trim('"')).firstChild;
             //Get or create Id
                 if(domElement.id == '') {
@@ -792,7 +654,7 @@ export default class Wire {
                     }
                 }
                 inner = domElement.innerHTML;
-                if(inner.length > 1) {
+                if(inner.length > 1 && inner.match(/\$\{.*?\}/g)) {
                     propToBind = inner;
                     inner.match(/\$\{.*?\}/g).forEach(element => {
                         elementValue = '';
@@ -804,7 +666,7 @@ export default class Wire {
                             if(window[elementValue] !== undefined) elementValue = window[elementValue];
                         } else elementName = element;
                         if(propObj[elementName] == undefined) propObj[elementName] = {};
-                        propObj[elementName]['innerHTML'] = inner.replace(element.split('=')[1],'').replace('=','');;
+                        propObj[elementName]['innerHTML'] = inner.replace(element.split('=')[1],'').replace('=','');
                         if(propObj[elementName]['value'] == undefined) propObj[elementName]['value'] = elementValue;
                         else elementValue = propObj[elementName]['value'];
                         propToBind = propToBind.replace(original,elementValue);
