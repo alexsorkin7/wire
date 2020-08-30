@@ -1,7 +1,7 @@
 export default class Wire {
 //#region Costructor
     constructor(appId) {
-        let statics = ['dom','date','time','htmlBind'];
+        let statics = ['dom','htmlBind'];
         statics.forEach(fu => {
             window[fu] = this.constructor[fu];
             this[fu] = this.constructor[fu];
